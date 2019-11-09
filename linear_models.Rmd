@@ -1,0 +1,98 @@
+---
+title: "Linear Models"
+author: "Alexis"
+date: "11/8/2019"
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rvest)
+
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "90%"
+  )
+
+  options(
+    ggplot2.continuous.colour = "viridis",
+    ggplot2.continuous.fill = "viridis"
+  )
+  
+  scale_colour_discrete = scale_colour_viridis_d
+  scale_fill_discrete = scale_fill_viridis_d
+  
+  theme_set(theme_minimal() + theme(legend.position = "bottom"))
+  
+```
+
+## This is going to be great
+Linear models are the best part of statistics
+```{r}
+library(p8105.datasets)
+```
+
+initial data cleaning
+```{r}
+data("nyc_airbnb")
+
+nyc_airbnb = 
+  nyc_airbnb %>% 
+  mutate(stars = review_scores_location / 2) %>% 
+  rename(
+    boro = neighbourhood_group,
+    neighborhood = neighbourhood) %>% 
+  filter(boro != "Staten Island") %>% 
+  select(price, stars, boro, neighborhood, room_type)
+```
+
+Fit a first linear model
+
+```{r}
+fit = lm(price ~ stars + boro, data = nyc_airbnb)
+```
+
+
+```{r, eval = FALSE}
+fit
+#Bronx is reference category automatically 
+
+summary(fit)
+coef(fit)
+summary(fit)$coef
+```
+
+tidy the results instead:
+
+```{r}
+fit %>%
+  broom::tidy() %>%
+  mutate(term = str_replace(term, "boro", "Boro: ")) %>%
+  knitr::kable(digits = 3)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
