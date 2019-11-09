@@ -75,9 +75,44 @@ fit %>%
   broom::tidy() %>%
   mutate(term = str_replace(term, "boro", "Boro: ")) %>%
   knitr::kable(digits = 3)
+
+fit %>%
+  broom::glance()
 ```
 
+## Take a look at factors ...
 
+```{r}
+nyc_airbnb = 
+  nyc_airbnb %>%
+  mutate(
+    boro = fct_infreq(boro),
+    #in order of most frequent borough
+    room_type = fct_infreq(room_type)
+    #in order of most frequent room type
+  )
+```
+
+refit the last model
+
+```{r}
+fit = lm(price ~ stars + boro, data = nyc_airbnb)
+
+fit %>%
+  broom::tidy()
+#reference group has changed
+```
+
+## diagnostics
+
+```{r}
+modelr::add_residuals(nyc_airbnb, fit) %>%
+  ggplot(aes(x = stars, y = resid)) +
+  geom_point() +
+  ylim(-500, 500)
+
+modelr::add_predictions(nyc_airbnb, fit)
+```
 
 
 
