@@ -156,6 +156,28 @@ cv_results %>%
 ```
 based on these resuls, pick smooth model
 
+## Child growth example
+```{r}
+child_growth = read_csv("./data/nepalese_children.csv")
+```
+
+```{r}
+child_growth %>%
+  ggplot(aes(x = weight, y = armc)) +
+  geom_point()
+```
+
+Add change point term
+ 
+```{r}
+child_growth =
+  child_growth %>% 
+  ggplot(aes(x = weight, y = armc)) + 
+  geom_point(alpha = .5)
+```
+
+
+
 
 
 

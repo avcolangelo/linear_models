@@ -85,19 +85,19 @@ better; training dataset has too much stuff
 rmse(linear_mod, test_df)
 ```
 
-    ## [1] 0.7137237
+    ## [1] 0.6644055
 
 ``` r
 rmse(smooth_mod, test_df)
 ```
 
-    ## [1] 0.2534611
+    ## [1] 0.2798716
 
 ``` r
 rmse(wiggly_mod, test_df)
 ```
 
-    ## [1] 0.3334082
+    ## [1] 0.3392617
 
 ## Do this all using `modelr`
 
@@ -119,16 +119,16 @@ cv_df %>% pull(train) %>% .[[1]] %>%
     ## # A tibble: 79 x 3
     ##       id      x      y
     ##    <int>  <dbl>  <dbl>
-    ##  1     1 0.343   0.681
-    ##  2     2 0.681  -0.246
-    ##  3     3 0.586   0.409
-    ##  4     4 0.0859  0.432
-    ##  5     6 0.209   0.921
-    ##  6     7 0.818  -1.52 
-    ##  7     9 0.840  -1.41 
-    ##  8    11 0.831  -2.03 
-    ##  9    12 0.464   0.256
-    ## 10    13 0.0737  0.743
+    ##  1     1 0.345   1.29 
+    ##  2     2 0.986  -4.04 
+    ##  3     3 0.313   1.38 
+    ##  4     5 0.863  -2.27 
+    ##  5     7 0.0447  0.502
+    ##  6     8 0.790  -1.87 
+    ##  7    10 0.603   0.207
+    ##  8    11 0.372   0.556
+    ##  9    12 0.735  -0.868
+    ## 10    14 0.395   0.471
     ## # ... with 69 more rows
 
 ``` r
@@ -174,3 +174,35 @@ cv_results %>%
 
 <img src="cross_validation_files/figure-gfm/unnamed-chunk-10-1.png" width="90%" />
 based on these resuls, pick smooth model
+
+## Child growth example
+
+``` r
+child_growth = read_csv("./data/nepalese_children.csv")
+```
+
+    ## Parsed with column specification:
+    ## cols(
+    ##   age = col_double(),
+    ##   sex = col_double(),
+    ##   weight = col_double(),
+    ##   height = col_double(),
+    ##   armc = col_double()
+    ## )
+
+``` r
+child_growth %>%
+  ggplot(aes(x = weight, y = armc)) +
+  geom_point()
+```
+
+<img src="cross_validation_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
+
+Add change point term
+
+``` r
+child_growth =
+  child_growth %>% 
+  ggplot(aes(x = weight, y = armc)) + 
+  geom_point(alpha = .5)
+```
