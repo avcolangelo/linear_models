@@ -1,0 +1,113 @@
+---
+title: "Bootstrapping"
+author: "Alexis"
+date: "11/17/2019"
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(rvest)
+
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6,
+  out.width = "90%"
+  )
+
+  options(
+    ggplot2.continuous.colour = "viridis",
+    ggplot2.continuous.fill = "viridis"
+  )
+  
+  scale_colour_discrete = scale_colour_viridis_d
+  scale_fill_discrete = scale_fill_viridis_d
+  
+  theme_set(theme_minimal() + theme(legend.position = "bottom"))
+  
+```
+
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+
+set.seed(1)
+```
+
+## Bootstrapping
+
+Constant variance vs. not 
+```{r}
+n_samp = 250
+
+sim_df_const = 
+  tibble(
+    x = rnorm(n_samp, 1, 1),
+    error = rnorm(n_samp, 0, 1),
+    y = 2 + 3 * x + error
+  )
+
+sim_df_nonconst = sim_df_const %>% 
+  mutate(
+  error = error * .75 * x,
+  y = 2 + 3 * x + error
+)
+```
+
+show my datasets
+```{r}
+sim_df = 
+  bind_rows(const = sim_df_const, nonconst = sim_df_nonconst, .id = "data_source") 
+
+sim_df %>% 
+  ggplot(aes(x = x, y = y)) + 
+  geom_point(alpha = .5) +
+  stat_smooth(method = "lm") +
+  facet_grid(~data_source) 
+```
+
+Fit two models
+```{r}
+sim_df_const %>%
+  lm(y ~ x, data = .) %>%
+  broom::tidy()
+
+sim_df_nonconst %>%
+  lm(y ~ x, data = .) %>%
+  broom::tidy()
+```
+
+## how can i bootstrap
+
+write a function to draw a bootstrap sample based on a dataframe.
+```{r}
+boot_sample = function(df) {
+  sample_frac(df, size = 1, replace = TRUE) 
+}
+```
+
+```{r}
+boot_sample(df = sim_df_nonconst) %>%
+  ggplot(aes(x = x, y = y)) +
+  geom_point(alpha = .5)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
