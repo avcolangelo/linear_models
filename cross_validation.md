@@ -85,19 +85,19 @@ better; training dataset has too much stuff
 rmse(linear_mod, test_df)
 ```
 
-    ## [1] 0.6644055
+    ## [1] 0.7912499
 
 ``` r
 rmse(smooth_mod, test_df)
 ```
 
-    ## [1] 0.2798716
+    ## [1] 0.3449995
 
 ``` r
 rmse(wiggly_mod, test_df)
 ```
 
-    ## [1] 0.3392617
+    ## [1] 0.3447688
 
 ## Do this all using `modelr`
 
@@ -119,16 +119,16 @@ cv_df %>% pull(train) %>% .[[1]] %>%
     ## # A tibble: 79 x 3
     ##       id      x      y
     ##    <int>  <dbl>  <dbl>
-    ##  1     1 0.345   1.29 
-    ##  2     2 0.986  -4.04 
-    ##  3     3 0.313   1.38 
-    ##  4     5 0.863  -2.27 
-    ##  5     7 0.0447  0.502
-    ##  6     8 0.790  -1.87 
-    ##  7    10 0.603   0.207
-    ##  8    11 0.372   0.556
-    ##  9    12 0.735  -0.868
-    ## 10    14 0.395   0.471
+    ##  1     1 0.745  -0.800
+    ##  2     2 0.0686  0.986
+    ##  3     3 0.767  -1.34 
+    ##  4     5 0.591   0.389
+    ##  5     6 0.657   0.438
+    ##  6     7 0.451   1.18 
+    ##  7     9 0.906  -2.51 
+    ##  8    10 0.0277  0.352
+    ##  9    12 0.823  -1.49 
+    ## 10    13 0.289   0.671
     ## # ... with 69 more rows
 
 ``` r
@@ -203,6 +203,66 @@ Add change point term
 ``` r
 child_growth =
   child_growth %>% 
-  ggplot(aes(x = weight, y = armc)) + 
-  geom_point(alpha = .5)
+  mutate(weight_cp = (weight > 7) * (weight - 7))
 ```
+
+Fit models
+
+``` r
+linear_mod = lm(armc ~ weight, data = child_growth)
+pwl_mod    = lm(armc ~ weight + weight_cp, data = child_growth)
+smooth_mod = gam(armc ~ s(weight), data = child_growth)
+```
+
+Make a plot
+
+``` r
+child_growth %>% 
+  gather_predictions(linear_mod, pwl_mod, smooth_mod) %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = weight, y = armc)) + 
+  geom_point(alpha = .5) +
+  geom_line(aes(y = pred), color = "red") + 
+  facet_grid(~model)
+```
+
+<img src="cross_validation_files/figure-gfm/unnamed-chunk-15-1.png" width="90%" />
+
+re-use my CV process – first get training / testing splits
+
+``` r
+cv_df =
+  crossv_mc(child_growth, 100) %>% 
+  mutate(
+    train = map(train, as_tibble),
+    test = map(test, as_tibble))
+```
+
+… then fit models and get RMSEs
+
+``` r
+cv_df = 
+  cv_df %>% 
+  mutate(linear_mod  = map(train, ~lm(armc ~ weight, data = .x)),
+         pwl_mod     = map(train, ~lm(armc ~ weight + weight_cp, data = .x)),
+         smooth_mod  = map(train, ~gam(armc ~ s(weight), data = as_tibble(.x)))) %>% 
+  mutate(rmse_linear = map2_dbl(linear_mod, test, ~rmse(model = .x, data = .y)),
+         rmse_pwl    = map2_dbl(pwl_mod, test, ~rmse(model = .x, data = .y)),
+         rmse_smooth = map2_dbl(smooth_mod, test, ~rmse(model = .x, data = .y)))
+```
+
+Let’s make a plot of results
+
+``` r
+cv_df %>% 
+  select(starts_with("rmse")) %>% 
+pivot_longer(
+    everything(),
+    names_to = "model", 
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  mutate(model = fct_inorder(model)) %>% 
+  ggplot(aes(x = model, y = rmse)) + geom_violin()
+```
+
+<img src="cross_validation_files/figure-gfm/unnamed-chunk-18-1.png" width="90%" />
